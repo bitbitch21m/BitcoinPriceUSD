@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live BTC Price</title>
+    <style>
+        #btcPriceContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Ubuntu', sans-serif;
+            background: transparent;
+        }
+        #priceDisplay {
+            text-align: center;
+        }
+        #btcPrice, #label {
+            font-weight: bold;
+            font-family: 'Ubuntu', sans-serif;
+        }
+        html {
+            font-size: 62.5%;
+        }
+        #btcPrice {
+            font-size: clamp(30px, 10vw, 150px); /* Smaller size: reduced from 50px-250px */
+        }
+        #label {
+            font-size: clamp(20px, 6vw, 40px); /* Slightly smaller label */
+            color: white;
+            margin-top: 20px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="btcPriceContainer">
+        <div id="priceDisplay">
+            <span id="btcPrice"></span>
+            <span id="label">BITCOIN PRICE USD</span>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let lastRealPrice = null;
+
+        // Fetch real Bitcoin price every 1 second
+        function fetchBitcoinPrice() {
+            fetch('https://api.coincap.io/v2/assets/bitcoin')
+                .then(response => response.json())
+                .then(data => {
+                    const price = parseFloat(data.data.priceUsd);
+                    updatePriceDisplay(price);
+                })
+                .catch(error => console.error('Error fetching price:', error));
+        }
+
+        // Update display with real data
+        function updatePriceDisplay(price) {
+            const formattedPrice = `$${Math.round(price).toLocaleString('en-US')}`;
+            document.getElementById('btcPrice').innerText = formattedPrice;
+
+            // Price color based on last real price
+            if (lastRealPrice !== null) {
+                document.getElementById('btcPrice').style.color = price > lastRealPrice ? 'green' : 'red';
+            } else {
+                document.getElementById('btcPrice').style.color = 'green'; // Default for first fetch
+            }
+
+            lastRealPrice = price;
+        }
+
+        // Start fetches
+        fetchBitcoinPrice();
+        setInterval(fetchBitcoinPrice, 1000); // Real data every 1 second
+    });
+</script>
+</body>
+</html>
