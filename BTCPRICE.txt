@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live BTC Price</title>
+    <style>
+        #btcPriceContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Ubuntu', sans-serif;
+            background: transparent;
+        }
+        #priceDisplay {
+            text-align: center;
+        }
+        #btcPrice, #label {
+            font-weight: bold;
+            font-family: 'Ubuntu', sans-serif;
+        }
+        html {
+            font-size: 62.5%;
+        }
+        #btcPrice {
+            font-size: clamp(30px, 10vw, 100px); /* Smaller size */
+        }
+        #label {
+            font-size: clamp(30px, 8vw, 60px);
+            color: white;
+            margin-top: 20px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="btcPriceContainer">
+        <div id="priceDisplay">
+            <span id="btcPrice"></span>
+            <span id="label">BITCOIN PRICE USD</span>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let lastRealPrice = null;
+
+        // Fetch real Bitcoin price from CoinGecko
+        function fetchBitcoinPrice() {
+            fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
+                .then(response => {
+                    if (!response.ok) throw new Error('API limit or network issue');
+                    return response.json();
+                })
+                .then(data => {
+                    const price = parseFloat(data.bitcoin.usd);
+                    updatePriceDisplay(price);
+                })
+                .catch(error => {
+                    console.error('Error fetching price:', error);
+                    // Hold last known price if fetch fails
+                    if (lastRealPrice !== null) {
+                        updatePriceDisplay(lastRealPrice);
+                    }
+                });
+        }
+
+        // Update display with real data
+        function updatePriceDisplay(price) {
+            const formattedPrice = `$${Math.round(price).toLocaleString('en-US')}`;
+            document.getElementById('btcPrice').innerText = formattedPrice;
+
+            if (lastRealPrice !== null) {
+                document.getElementById('btcPrice').style.color = price > lastRealPrice ? 'green' : 'red';
+            } else {
+                document.getElementById('btcPrice').style.color = 'green'; // Default for first fetch
+            }
+
+            lastRealPrice = price;
+        }
+
+        // Start with initial fetch
+        fetchBitcoinPrice();
+
+        // Fetch every 1.2 seconds (50 requests/minute)
+        setInterval(fetchBitcoinPrice, 1200);
+    });
+</script>
+</body>
+</html>
